@@ -2,29 +2,42 @@
 #include <fstream>
 #include <curl/curl.h>
 #include <cstring>
+#include <cstdlib>
 #include <list>
 #include "ThreatSrcData.h"
+#include <zlib.h>
 
 using namespace std;
 
 namespace ThreatSrcData{
     //일반 파일 다운로드용 생성자
-    CurlHandler::CurlHandler(string url)
+    CurlHandler::CurlHandler(const string url)
     : filename("./result"){
-        FILE *fp = fopen(filename.c_str(), "wb");
-        curl = curl_easy_init();
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeData);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-        curl_easy_perform(curl);
-        curl_easy_cleanup(curl);
-        fclose(fp);
+        setCurl(url);
     }
 
     //로그인이 필요한 파일 다운로드용 생성자
     CurlHandler::CurlHandler(string url, string userId, string userPw)
     : filename("./result"){
+        setCurl(url, userId, userPw);
+    }
+
+    //gzip으로 압축된 파일을 다운로드 후 압축 해제를 위한 생성자
+    CurlHandler::CurlHandler(string url, bool zipped)
+    : filename("./result.gz"){
+        setCurl(url);
+        
+        system("gzip -d result.gz");
+
+        //unzipFile("temp.gz");
+    }
+
+    //다운로드한 파일 삭제
+    CurlHandler::~CurlHandler(){
+        //remove(filename.c_str());
+    }
+
+    void CurlHandler::setCurl(const string url, string userId, string userPw){
         FILE *fp = fopen(filename.c_str(), "wb");
         curl = curl_easy_init();
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -40,25 +53,17 @@ namespace ThreatSrcData{
         fclose(fp);
     }
 
-    //gzip으로 압축된 파일을 다운로드 후 압축 해제를 위한 생성자
-    CurlHandler::CurlHandler(string url, bool zipped)
-    : filename("./result"){
-        FILE *fp = fopen("temp.gz", "wb");
-        //setCurl(fp);
-        fclose(fp);
-
-        unzipFile("temp.gz");
-    }
-
-    //다운로드한 파일 삭제
-    CurlHandler::~CurlHandler(){
-        remove(filename.c_str());
-    }
-
-    void CurlHandler::unzipFile(string fn){
+    void CurlHandler::setCurl(const string url){
+        FILE *fp = fopen(filename.c_str(), "wb");
+        curl = curl_easy_init();
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeData);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+        curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+        fclose(fp);
     }
-
 
     //mode가 true면 read, false면 write
     CSVHandler::CSVHandler(string filename, const char* delimiter, bool mode){

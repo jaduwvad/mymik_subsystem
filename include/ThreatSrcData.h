@@ -13,8 +13,8 @@ namespace ThreatSrcData{
         ~CurlHandler();
 
     private:
-        void unzipFile(std::string fn);
-
+        void setCurl(const std::string url);
+        void setCurl(const std::string url, std::string userId, std::string userPw);
         static size_t writeData(void *ptr, size_t size, size_t nmemb, FILE *stream){
             return fwrite(ptr, size, nmemb, stream);
         }
