@@ -20,9 +20,6 @@ namespace ThreatShopData {
             return fwrite(ptr, size, nmemb, stream);
         }
 
-        CURL *curl;
-        CURLcode res;
-        std::string url;
-        std::string filename;
+        std::string _filename;
     };
 }

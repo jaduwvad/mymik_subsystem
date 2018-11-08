@@ -8,34 +8,34 @@ using namespace std;
 
 namespace ThreatShopData {
     CSVHandler::CSVHandler(string filename, char delimiter, bool mode){
-        this->delimiter = delimiter;
+        this->_delimiter = _delimiter;
 
         if(mode){
-            srcFile.open(filename.c_str());
+            _srcFile.open(filename.c_str());
             string headerStr;
-            getline(srcFile, headerStr);
-            myExplode(headerStr, header);
+            getline(_srcFile, headerStr);
+            myExplode(headerStr, _header);
         }
         else
-            dstFile.open(filename.c_str());
+            _dstFile.open(filename.c_str());
     }
 
     CSVHandler::~CSVHandler(){
-        srcFile.close();
-        dstFile.close();
+        _srcFile.close();
+        _dstFile.close();
     }
 
     void CSVHandler::readColumn(string columnHeader, vector<string>& result){
         string strTemp;
         vector<string> listTemp;
-        auto it = find(header.begin(), header.end(), columnHeader);
+        auto it = find(_header.begin(), _header.end(), columnHeader);
 
-        if(header.end() == it)
+        if(_header.end() == it)
             return;
 
-        int columnPos = distance(header.begin(), it);
+        int columnPos = distance(_header.begin(), it);
 
-        while(getline(srcFile, strTemp)){
+        while(getline(_srcFile, strTemp)){
             myExplode(strTemp, listTemp);
             result.push_back(listTemp.at(columnPos));
             listTemp.clear();
@@ -51,16 +51,16 @@ namespace ThreatShopData {
             result = result+",";
         }
         result.pop_back();
-        dstFile<<result<<endl;
+        _dstFile<<result<<endl;
     }
 
     void CSVHandler::myExplode(string s, vector<string>& result) {
         string buff("");
 
         for(char n:s) {
-            if(n != delimiter && n != '"')
+            if(n != _delimiter && n != '"')
                 buff += n;
-            else if( n == delimiter ) {
+            else if( n == _delimiter ) {
                 result.push_back(buff);
                 buff="";
             }

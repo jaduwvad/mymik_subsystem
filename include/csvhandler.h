@@ -15,10 +15,10 @@ namespace ThreatShopData{
     private:
         void myExplode(std::string s, std::vector<std::string>& result);
 
-        std::ifstream srcFile;
-        std::ofstream dstFile;
-        char delimiter;
-        std::vector<std::string> header;
+        std::ifstream _srcFile;
+        std::ofstream _dstFile;
+        char _delimiter;
+        std::vector<std::string> _header;
     };
 }
 

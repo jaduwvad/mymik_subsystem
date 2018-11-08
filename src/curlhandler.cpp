@@ -6,28 +6,29 @@ using namespace std;
 
 namespace ThreatShopData {
     CurlHandler::CurlHandler(string url, string filename) {
-        this->filename = filename;
+        this->_filename = filename;
         setCurl(url);
     }
 
     CurlHandler::CurlHandler(string url, string filename, string userId, string userPw) {
-        this->filename = filename;
+        this->_filename = filename;
         setCurl(url, userId, userPw);
     }
 
     CurlHandler::CurlHandler(string url, string filename, bool zipped) {
-        this->filename = filename+".gz";
+        this->_filename = filename+".gz";
         setCurl(url);
 
         //system("gzip -d " + this->filename);
     }
 
     CurlHandler::~CurlHandler() {
-        remove(filename.c_str());
+        remove(_filename.c_str());
     }
 
     void CurlHandler::setCurl(const string url){
-        FILE *fp = fopen(filename.c_str(), "w");
+        FILE *fp = fopen(_filename.c_str(), "w");
+        CURL *curl;
         curl = curl_easy_init();
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
@@ -39,7 +40,8 @@ namespace ThreatShopData {
     }
 
     void CurlHandler::setCurl(const string url, string userId, string userPw){
-        FILE *fp = fopen(filename.c_str(), "w");
+        FILE *fp = fopen(_filename.c_str(), "w");
+        CURL *curl;
         struct curl_slist* headers = NULL;
         string s = userId+":"+userPw;
         string data = "Authorization: Basic " + base64_encode(reinterpret_cast<const unsigned char*>(s.c_str()), s.length());
