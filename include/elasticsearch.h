@@ -80,6 +80,8 @@ class ElasticSearch {
         void refresh(const std::string& index);
 
     public:
+        /// Private constructor.
+        ElasticSearch();
         /// Initialize a scroll search. Use the returned scroll id when calling scrollNext. Size is based on shardSize. Returns false on error
         bool initScroll(std::string& scrollId, const std::string& index, const std::string& type, const std::string& query, int scrollSize = 1000);
 
@@ -96,8 +98,6 @@ class ElasticSearch {
         void appendHitsToArray(const Json::Object& msg, Json::Array& resultArray);
 
     private:
-        /// Private constructor.
-        ElasticSearch();
 
         /// HTTP Connexion module.
         HTTP _http;
