@@ -63,6 +63,7 @@ void ElasticSearch::getDocument(const std::string& index, const std::string& typ
     oss << index << "/" << type << "/_search";
     std::stringstream query;
     query << "{\"query\":{\"match\":{\""<< key << "\":\"" << value << "\"}}}";
+
     _http.post(oss.str().c_str(), query.str().c_str(), &msg);
 }
 
@@ -151,10 +152,6 @@ bool ElasticSearch::index(const std::string& index, const std::string& type, con
 
     if(result.getValue("created"))
         return true;
-
-    std::cout << "endPoint: " << index << "/" << type << "/" << id << std::endl;
-    std::cout << "jData" << jData.pretty() << std::endl;
-    std::cout << "result" << result.pretty() << std::endl;
 
     EXCEPTION("The index returns ok: false.");
     return false;
@@ -256,7 +253,6 @@ long ElasticSearch::search(const std::string& index, const std::string& type, co
 
 
     _http.post(url.str().c_str(), query.c_str(), &result);
-
     if(!result.member("timed_out")){
         std::cout << url.str() << " -d " << query << std::endl;
         std::cout << "result: " << result << std::endl;

@@ -94,17 +94,11 @@ HTTP::HTTP(std::string uri, bool keepAlive)
         EXCEPTION("Error retrieving DNS information.");
 
     // print information about this host:
-    struct in_addr **addr_list;
-    std::cout<<"Official name is: "<<host->h_name;
-    std::cout<<", IP addresses: ";
-    addr_list = (struct in_addr **)host->h_addr_list;
-    for(int i = 0; addr_list[i] != NULL; i++)
-        std::cout<<inet_ntoa(*addr_list[i]);
+    //struct in_addr **addr_list;
+    //addr_list = (struct in_addr **)host->h_addr_list;
+    //for(int i = 0; addr_list[i] != NULL; i++)
+    //    std::cout<<inet_ntoa(*addr_list[i]);
 
-    if(_keepAlive)
-        std::cout<<", session keep alive connection."<<std::endl;
-    else
-        std::cout<<", session is not keep alive connection."<<std::endl;
 
     bzero(&_client, sizeof(_client));
 
@@ -619,7 +613,6 @@ unsigned int HTTP::parseMessage(std::string& output, size_t& contentLength, bool
         }
 
         assert(readSize <= 4095);
-
         // If we already got the header from a non chunked message.
         if(contentLength > 0) {
             // If we have the content length, append the result to the output.
@@ -643,7 +636,6 @@ unsigned int HTTP::parseMessage(std::string& output, size_t& contentLength, bool
         if(contentLength == 0 && !isChunked) {
 
             char* endStatus = strstr(recvline,"\r\n");
-
             if(endStatus == NULL) {
                 disconnect();
                 result = ERROR;
@@ -734,7 +726,7 @@ unsigned int HTTP::parseMessage(std::string& output, size_t& contentLength, bool
             size_t headerSize = endHeader + 4 - recvline;
 
             // Extract and interpret the header.
-            char* contentLenghtPos = strstr(endStatus+2,"Content-Length:");
+            char* contentLenghtPos = strstr(endStatus+2,"content-length:");
 
             // If we've got the content-length.
             if(contentLenghtPos == NULL){
@@ -778,6 +770,7 @@ unsigned int HTTP::parseMessage(std::string& output, size_t& contentLength, bool
                 assert( endHeader - recvline + contentLength + 4 >= (unsigned int)readSize);
                 output.append(endHeader+4, readSize - headerSize);
             }
+
         }
 
         while( output.length() <  contentLength) {

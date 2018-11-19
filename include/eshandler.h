@@ -16,8 +16,6 @@ namespace ThreatShopData {
     private:
         std::string _ess;
         std::string _essIndex;
-        std::string _essFuncUpdate;
-        std::string _essFuncSearch;
         std::string _essIndexType;
 
 
