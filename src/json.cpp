@@ -112,8 +112,8 @@ const char* Json::Value::showType() const{
 
 const std::string& Json::Value::getString() const {
 
-    if(_type == stringType)
-        return _data;
+    //if(_type == stringType)
+    return _data;
 
     throw std::logic_error("not a string");
 

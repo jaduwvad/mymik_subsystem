@@ -298,21 +298,24 @@ void ElasticSearch::refresh(const std::string& index){
     _http.get(oss.str().c_str(), 0, &msg);
 }
 
-bool ElasticSearch::initScroll(std::string& scrollId, const std::string& index, const std::string& type, const std::string& query, int scrollSize) {
+bool ElasticSearch::initScroll(Json::Array& resultArray, std::string& scrollId, const std::string& index, const std::string& type, const std::string& query, int scrollSize) {
     std::ostringstream oss;
-    oss << index << "/" << type << "/_search?scroll=1m&search_type=scan&size=" << scrollSize;
-
+    oss << index << "/" << type << "/_search?scroll=1m&size="<< scrollSize;
     Json::Object msg;
-    if (200 != _http.post(oss.str().c_str(), query.c_str(), &msg))
+    int re = _http.post(oss.str().c_str(), query.c_str(), &msg);
+    if (200 != re && 0 != re)
         return false;
     
     scrollId = msg["_scroll_id"].getString();
+
+    appendHitsToArray(msg, resultArray);
     return true;
 }
 
 bool ElasticSearch::scrollNext(std::string& scrollId, Json::Array& resultArray) {
     Json::Object msg;
-    if (200 != _http.post("/_search/scroll?scroll=1m", scrollId.c_str(), &msg))
+    scrollId = "{\"scroll\":\"1m\", \"scroll_id\":\""+scrollId+"\"}";
+    if (200 != _http.post("_search/scroll", scrollId.c_str(), &msg))
         return false;
     
     scrollId = msg["_scroll_id"].getString();
@@ -322,12 +325,13 @@ bool ElasticSearch::scrollNext(std::string& scrollId, Json::Array& resultArray) 
 }
 
 void ElasticSearch::clearScroll(const std::string& scrollId) {
-    _http.remove("/_search/scroll", scrollId.c_str(), 0);
+    std::string temp = "{\"scroll\":\"1m\", \"scroll_id\":\""+scrollId+"\"}";
+    _http.remove("_search/scroll", temp.c_str(), 0);
 }
 
+    /*
 int ElasticSearch::fullScan(const std::string& index, const std::string& type, const std::string& query, Json::Array& resultArray, int scrollSize) {
     resultArray.clear();
-    
     std::string scrollId;
     if (!initScroll(scrollId, index, type, query, scrollSize))
         return 0;
@@ -335,6 +339,7 @@ int ElasticSearch::fullScan(const std::string& index, const std::string& type, c
     size_t currentSize=0, newSize;
     while (scrollNext(scrollId, resultArray))
     {
+        std::cout<<resultArray.size();
         newSize = resultArray.size();
         if (currentSize == newSize)
             break;
@@ -343,6 +348,7 @@ int ElasticSearch::fullScan(const std::string& index, const std::string& type, c
     }
     return currentSize;
 }
+*/
 
 void ElasticSearch::appendHitsToArray(const Json::Object& msg, Json::Array& resultArray) {
 

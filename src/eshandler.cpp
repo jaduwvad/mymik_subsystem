@@ -15,9 +15,8 @@ namespace ThreatShopData {
 
     }
 
-    void ESHandler::getArticles(string spn, string tag) {
+    void ESHandler::getArticles(string spn, string tag, Json::Object& jo) {
         ElasticSearch es(_ess);
-        Json::Object jo;
         string query = "{ \
             \"query\":{ \
                 \"bool\":{ \
@@ -30,7 +29,6 @@ namespace ThreatShopData {
         }";
 
         es.search(_essIndex, _essIndexType, query, jo);
-        cout<<jo.pretty()<<endl;
     }
 
     void ESHandler::updatePrice(string variantID, string price) {
@@ -42,14 +40,51 @@ namespace ThreatShopData {
         es.update(_essIndex, _essIndexType, variantID, jo);
     }
 
-    void ESHandler::getFieldList(string esResponse, string fieldName){
-        
+    void ESHandler::getArticlesByTag(string tag, Json::Array& result ){
+        ElasticSearch es(_ess);
+        string scrollId;
+        string query = "{ \
+            \"query\":{ \
+                \"match\":{ \
+                    \"artNumber\":\"" + tag + "\" \
+                } \
+            } \
+        }";
+
+        es.initScroll(result, scrollId, _essIndex, _essIndexType, query, 5000);
+        size_t cs=0, ns;
+        while(es.scrollNext(scrollId, result)){
+            ns = result.size();
+            if(cs == ns)
+                break;
+            cs = ns;
+        }
+
+        es.clearScroll(scrollId);
     }
 
+    void ESHandler::getFieldList(Json::Array& esResponse, vector<string> fieldsName, vector<Json::Object>& result){
+        Json::Array::const_iterator ci = esResponse.begin();
+
+        do{
+            Json::Object jo((*ci).getObject()["_source"].getObject());
+            Json::Object temp;
+
+            for(string fieldName:fieldsName){
+                temp.addMemberByKey(fieldName, jo[fieldName].getString());
+
+
+            }
+            result.push_back(temp);
+            ci = ++ci;
+        }while(ci != esResponse.end());
+    }
+
+/*
     bool ESHandler::isSuccess(string esResponse){
 
     }
-
+*/
 }
 
 

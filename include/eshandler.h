@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <vector>
 #include "elasticsearch.h"
 
 namespace ThreatShopData {
@@ -8,9 +9,10 @@ namespace ThreatShopData {
         ESHandler();
         ~ESHandler();
 
-        void getArticles(std::string spn, std::string tag);
+        void getArticles(std::string spn, std::string tag, Json::Object& jo);
         void updatePrice(std::string variantID, std::string price);
-        void getFieldList(std::string esResponse, std::string fieldName);
+        void getArticlesByTag(std::string tag, Json::Array& result);
+        void getFieldList(Json::Array& esResponse, std::vector<std::string> fieldsName, std::vector<Json::Object>& result);
         bool isSuccess(std::string esResponse);
 
     private:

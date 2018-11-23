@@ -83,7 +83,7 @@ class ElasticSearch {
         /// Private constructor.
         ElasticSearch();
         /// Initialize a scroll search. Use the returned scroll id when calling scrollNext. Size is based on shardSize. Returns false on error
-        bool initScroll(std::string& scrollId, const std::string& index, const std::string& type, const std::string& query, int scrollSize = 1000);
+        bool initScroll(Json::Array& resultArray, std::string& scrollId, const std::string& index, const std::string& type, const std::string& query, int scrollSize = 1000);
 
         /// Scroll to next matches of an initialized scroll search. scroll_id may be updated. End is reached when resultArray.empty() is true (in which scroll is automatically cleared). Returns false on error.
         bool scrollNext(std::string& scrollId, Json::Array& resultArray);

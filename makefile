@@ -18,13 +18,10 @@ OBJFLAGS = -fPIC
 SHARELIBFLAGS = -shared -o
 
 
-all: csvhandler curlhandler json http elasticsearch eshandler libmaker test
+all: srcdatafile json http elasticsearch eshandler libmaker test
 
-csvhandler: $(SRCPATH)/csvhandler.cpp
-	$(CC) $(OBJFLAGS) -c $(SRCPATH)/csvhandler.cpp -o $(OBJPATH)/csvhandler.o $(VERSIONFLAG) $(INCLUDEFLAG)
-
-curlhandler: $(SRCPATH)/curlhandler.cpp
-	$(CC) $(OBJFLAGS) -c $(SRCPATH)/curlhandler.cpp -o $(OBJPATH)/curlhandler.o $(CURLFLAG) $(INCLUDEFLAG)
+srcdatafile: $(SRCPATH)/srcdatafile.cpp
+	$(CC) $(OBJFLAGS) -c $(SRCPATH)/srcdatafile.cpp -o $(OBJPATH)/srcdatafile.o $(VERSIONFLAG) $(INCLUDEFLAG) $(CURLFLAG)
 
 json: $(SRCPATH)/json.cpp
 	$(CC) $(OBJFLAGS) -c $(SRCPATH)/json.cpp -o $(OBJPATH)/json.o $(ESFLAG)

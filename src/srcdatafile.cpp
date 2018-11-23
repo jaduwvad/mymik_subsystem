@@ -1,32 +1,76 @@
-#include <iostream>
-#include <curl/curl.h>
-#include "curlhandler.h"
+#include <algorithm>
+#include "srcdatafile.h"
+#include "json.h"
 
 using namespace std;
 
 namespace ThreatShopData {
-    CurlHandler::CurlHandler(string url, string filename) {
+    SrcDataFile::SrcDataFile(string url, string filename, const char delimiter) {
         this->_filename = filename;
+        this->_delimiter = delimiter;
         setCurl(url);
+        setFileStream();
     }
 
-    CurlHandler::CurlHandler(string url, string filename, string userId, string userPw) {
+    SrcDataFile::SrcDataFile(string url, string filename, const char delimiter, string userId, string userPw){
         this->_filename = filename;
+        this->_delimiter = delimiter;
         setCurl(url, userId, userPw);
+        setFileStream();
     }
 
-    CurlHandler::CurlHandler(string url, string filename, bool zipped) {
-        this->_filename = filename+".gz";
+    SrcDataFile::SrcDataFile(string url, string filename, const char delimiter, bool zipped){ 
+        this->_filename = filename;
+        this->_delimiter = delimiter;
         setCurl(url);
 
-        //system("gzip -d " + this->filename);
+        //system("gzip -d " + this->_filename + ".gz");
+        setFileStream();
     }
 
-    CurlHandler::~CurlHandler() {
+    SrcDataFile::~SrcDataFile(){
+        _srcFile.close();
         remove(_filename.c_str());
     }
 
-    void CurlHandler::setCurl(const string url){
+    void SrcDataFile::readColumn(vector<string> columnHeaders, vector<Json::Object>& result){
+        vector<int> headerList;
+        string strTemp;
+        vector<string> listTemp;
+
+        for(string header:columnHeaders){
+            auto it = find(_header.begin(), _header.end(), header);
+
+            if(_header.end() == it)
+                return;
+
+            headerList.push_back( distance( _header.begin(), it ) );
+        }
+
+        while(getline(_srcFile, strTemp)){
+            myExplode(strTemp, listTemp);
+            Json::Object jo;
+
+            for(int i=0; i<columnHeaders.size(); i++)
+                jo.addMemberByKey(columnHeaders.at(i), listTemp.at(headerList.at(i)));
+
+            result.push_back(jo);
+            listTemp.clear();
+        }
+
+        _srcFile.clear();
+        _srcFile.seekg(_filePointer, ios::beg);
+    }
+
+    void SrcDataFile::setFileStream(){
+        string headerStr;
+        _srcFile.open(_filename.c_str());
+        getline(_srcFile, headerStr);
+        myExplode(headerStr, _header);
+        _filePointer = _srcFile.tellg();
+    }
+
+    void SrcDataFile::setCurl(const string url){
         FILE *fp = fopen(_filename.c_str(), "w");
         CURL *curl;
         curl = curl_easy_init();
@@ -39,7 +83,7 @@ namespace ThreatShopData {
         fclose(fp);
     }
 
-    void CurlHandler::setCurl(const string url, string userId, string userPw){
+    void SrcDataFile::setCurl(const string url, string userId, string userPw) {
         FILE *fp = fopen(_filename.c_str(), "w");
         CURL *curl;
         struct curl_slist* headers = NULL;
@@ -51,7 +95,7 @@ namespace ThreatShopData {
         headers = curl_slist_append(headers, data.c_str());
 
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlHandler::writeData);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeData);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
 
         curl_easy_perform(curl);
@@ -60,11 +104,21 @@ namespace ThreatShopData {
         fclose(fp);
     }
 
-    void CurlHandler::unzipFile(string fn){
+    void SrcDataFile::myExplode(string s, vector<string>& result) {
+        string buff("");
 
+        for(char n:s) {
+            if(n != _delimiter && n != '"')
+                buff += n;
+            else if( n == _delimiter ) {
+                result.push_back(buff);
+                buff = "";
+            }
+        }
+        if(buff != "") result.push_back(buff);
     }
 
-    string CurlHandler::base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len) {
+    string SrcDataFile::base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len){
         string base64_chars =
              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
              "abcdefghijklmnopqrstuvwxyz"
@@ -106,4 +160,3 @@ namespace ThreatShopData {
         return ret;
     }
 }
-
