@@ -59,8 +59,6 @@ namespace ThreatShopData {
                 break;
             cs = ns;
         }
-
-        es.clearScroll(scrollId);
     }
 
     void ESHandler::getFieldList(Json::Array& esResponse, vector<string> fieldsName, vector<Json::Object>& result){

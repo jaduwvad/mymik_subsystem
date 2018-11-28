@@ -18,7 +18,7 @@ OBJFLAGS = -fPIC
 SHARELIBFLAGS = -shared -o
 
 
-all: srcdatafile json http elasticsearch eshandler libmaker test
+all: srcdatafile json http elasticsearch eshandler mymikprocess libmaker test
 
 srcdatafile: $(SRCPATH)/srcdatafile.cpp
 	$(CC) $(OBJFLAGS) -c $(SRCPATH)/srcdatafile.cpp -o $(OBJPATH)/srcdatafile.o $(VERSIONFLAG) $(INCLUDEFLAG) $(CURLFLAG)
@@ -34,6 +34,9 @@ elasticsearch: $(SRCPATH)/elasticsearch.cpp
 
 eshandler: $(SRCPATH)/eshandler.cpp
 	$(CC) $(OBJFLAGS) -c $(SRCPATH)/eshandler.cpp -o $(OBJPATH)/eshandler.o $(ESFLAG)
+
+mymikprocess: $(SRCPATH)/mymikprocess.cpp
+	$(CC) $(OBJFLAGS) -c $(SRCPATH)/mymikprocess.cpp -o $(OBJPATH)/mymikprocess.o $(ESFLAG)
 
 libmaker: $(LIBPATH)
 	$(CC) $(SHARELIBFLAGS) $(LIBPATH)/libtsd.so $(OBJPATH)/*

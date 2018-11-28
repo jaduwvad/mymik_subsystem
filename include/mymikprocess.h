@@ -1,22 +1,24 @@
 #pragma once
 #include <iostream>
 #include <vector>
-#include "json.h"
+#include "eshandler.h"
 
 class MymikProcess {
 public:
     MymikProcess();
     ~MymikProcess();
+
+    void matchingList(std::vector<Json::Object>& srcData, std::vector<Json::Object>& esData, std::vector<Json::Object>& result);
+    void getShopData(Json::Array& shopData);
     void getESData(std::vector<Json::Object>& esData, std::string tag);
-    void configShop(Json::Object shop);
-    void matchingList(std::vector<Json::Object>& src, std::vector<Json::Object>& dst, std::vector<Json::Object>& result);
-    void setPriceInven(std::vector<Json::Object>& src, std::vector<Json::Object>& dst);
+    void showTime();
+    std::string formSupplierNumber(std::string spn);
 
 private:
-    void getConfig(Json::Array& configData);
-    std::string getSupplierNumber(std::string spn);
-    bool myCompare(Json::Object a, Json::Object b);
-    bool myCompare2(Json::Object a, Json::Object b);
-}
+    const std::string shopDataFile;
+    const std::string esSpnColumn;
+    const std::string srcArtNumberColumn;
+    const std::string configMainTag;
+};
 
 
