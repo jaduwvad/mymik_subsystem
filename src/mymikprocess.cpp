@@ -1,19 +1,22 @@
 #include <ctime>
 #include <fstream>
+#include <algorithm>
 #include "mymikprocess.h"
+#include "srcdatafile.h"
 
 using namespace std;
 
 MymikProcess::MymikProcess():
-    shopDataFile("/tmp/mymik/data/shop_data.json"),
-    esSpnColumn("supplierNumber"),
-    srcArtNumberColumn("ArtNumber"),
-    configMainTag("shops") { }
+    _shopDataFile("/tmp/mymik/data/shop_data.json"),
+    _priceDataDir("/tmp/mymik/results/"),
+    _invenDataAcDir("/tmp/mymik/inven/"),
+    _invenDataInacDir("/tmp/mymik/inven/"),
+    _configMainTag("shops") { }
 
 MymikProcess::~MymikProcess() { }
 
 void MymikProcess::getShopData(Json::Array& shopData){
-    ifstream ifile(shopDataFile);
+    ifstream ifile(_shopDataFile);
     Json::Object jo;
     string lineTemp;
     string result = "";
@@ -22,7 +25,7 @@ void MymikProcess::getShopData(Json::Array& shopData){
         result += lineTemp+"\n";
 
     jo.addMember(result.c_str(), result.c_str()+result.size());
-    shopData = jo[configMainTag].getArray();
+    shopData = jo[_configMainTag].getArray();
 }
 
 void MymikProcess::showTime(){
@@ -48,10 +51,10 @@ void MymikProcess::getESData(vector<Json::Object>& esData, string tag){
     vector<string> fields;
     ThreatShopData::ESHandler es;
 
-    fields.push_back("artNumber");
-    fields.push_back("supplierNumber");
+    fields.push_back("artnumber");
+    fields.push_back("suppliernumber");
     fields.push_back("price");
-    fields.push_back("variantID");
+    fields.push_back("variantid");
 
     es.getArticlesByTag(tag, resultArray);
     es.getFieldList(resultArray, fields, esData);
@@ -59,26 +62,78 @@ void MymikProcess::getESData(vector<Json::Object>& esData, string tag){
     resultArray.clear();
 }
 
-void MymikProcess::matchingList(vector<Json::Object>& srcData, vector<Json::Object>& esData, vector<Json::Object>& result){
-    int esDataIndex = 0;
+void MymikProcess::getSrcData(Json::Array::const_iterator ci, string filename, vector<Json::Object>& srcData) {
+    ThreatShopData::SrcDataFile ch((*ci).getString(), filename, ';');
+    vector<string> headers;
+    
+    headers.push_back("ArtNumber");
+    headers.push_back("Price");
 
-    for(int i=0; i<srcData.size() && esDataIndex < esData.size(); i++){
+    ch.readColumn(headers, srcData);
+    headers.clear();
+}
+
+void MymikProcess::setUpdatedData(Json::Object& updatedData, Json::Object& srcData, string price, bool priceUpdate) {
+    updatedData.addMemberByKey("variantid", srcData["variantid"].getString());
+    updatedData.addMemberByKey("suppliernumber", srcData["suppliernumber"].getString());
+    updatedData.addMemberByKey("price", price);
+    updatedData.addMemberByKey("priceUpdate", priceUpdate);
+}
+
+void MymikProcess::matchingList(vector<Json::Object>& srcData, vector<Json::Object>& esData, vector<Json::Object>& result) {
+    int esDataIndex = 0;
+    int srcDataSize = srcData.size();
+    int esDataSize = esData.size();
+
+    for(int i=0; i<srcDataSize && esDataIndex < esDataSize; i++){
         string srcArtNumber = srcData.at(i)["ArtNumber"].getString();
-        string esDataSpn = esData.at(esDataIndex)["supplierNumber"].getString();
+        string esDataSpn = esData.at(esDataIndex)["suppliernumber"].getString();
 
         srcArtNumber = formSupplierNumber(srcArtNumber);
+        Json::Object updatedData;
+
         if(srcArtNumber>esDataSpn){
             esDataIndex++;
             i--;
         }
         else if(srcArtNumber == esDataSpn){
-            result.push_back(esData.at(esDataIndex));
+            string price = srcData.at(i)["Price"].getString();
+
+            if(srcData.at(i)["Price"].getString() != esData.at(esDataIndex)["price"].getString())
+                setUpdatedData(updatedData, esData.at(esDataIndex), price, true);
+            else
+                setUpdatedData(updatedData, esData.at(esDataIndex), price, false);
+            result.push_back(updatedData);
             esDataIndex++;
         }
     }
 }
 
+void MymikProcess::setPriceInven(vector<Json::Object>& matchedData, string filename) {
+    int matchedDataSize = matchedData.size();
 
+    ofstream priceFile(_priceDataDir + "price_" + filename);
+    ofstream invenFile(_invenDataAcDir + "inven_" + filename);
+
+    string priceData;
+    string invenData;
+
+    for(int i=0; i < matchedDataSize; i++){
+        Json::Object matchedObject = matchedData.at(i);
+
+        invenFile<<matchedObject["suppliernumber"].getString()<<",";
+        invenFile<<matchedObject["variantid"].getString()<<endl;
+
+        if(matchedObject["priceUpdate"].getBoolean()){
+            priceFile<<matchedObject["suppliernumber"].getString()<<",";
+            priceFile<<matchedObject["variantid"].getString()<<",";
+            priceFile<<matchedObject["price"].getString()<<endl;
+        }
+    }
+
+    priceFile.close();
+    invenFile.close();
+}
 
 
 

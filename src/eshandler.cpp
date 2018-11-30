@@ -21,8 +21,8 @@ namespace ThreatShopData {
             \"query\":{ \
                 \"bool\":{ \
                     \"must\":[ \
-                        {\"match\":{\"supplierNumber\":{\"query\":\"" + spn + "\", \"operator\":\"and\"}}}, \
-                        {\"match\":{\"artNumber\":\"" + tag + "\"}} \
+                        {\"match\":{\"suppliernumber\":{\"query\":\"" + spn + "\", \"operator\":\"and\"}}}, \
+                        {\"match\":{\"artnumber\":\"" + tag + "\"}} \
                     ] \
                 }\
             }\
@@ -46,7 +46,7 @@ namespace ThreatShopData {
         string query = "{ \
             \"query\":{ \
                 \"match\":{ \
-                    \"artNumber\":\"" + tag + "\" \
+                    \"artnumber\":\"" + tag + "\" \
                 } \
             } \
         }";
