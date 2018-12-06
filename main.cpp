@@ -1,7 +1,6 @@
 #include <ctime>
 #include <algorithm>
 #include <cstring>
-#include "eshandler.h"
 #include "srcdatafile.h"
 #include "mymikprocess.h"
 
@@ -11,7 +10,6 @@ using namespace ThreatShopData;
 MymikProcess mp;
 
 void configShop(Json::Object shop);
-void setPriceInven(vector<Json::Object>& src, vector<Json::Object>& dst);
 
 int main() {
     Json::Array shopData;
