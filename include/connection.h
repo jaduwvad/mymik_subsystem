@@ -15,13 +15,14 @@ public:
     ~Connection();
 
     void sendMessages(std::vector<std::string> messages);
-
+    bool getConnection();
     struct sockaddr_in servaddr;
 
 private:
     int sockfd;
     char line[MAX_LINE];
     std::string ip;
+    std::string terminateMessage;
 };
 
 

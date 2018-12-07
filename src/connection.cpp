@@ -4,7 +4,8 @@
 using namespace std;
 
 Connection::Connection():
-    ip("94.130.50.93"){
+    ip("94.130.50.93"),
+    terminateMessage("connection terminate") { 
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -17,14 +18,16 @@ Connection::Connection():
 Connection::~Connection(){}
 
 void Connection::sendMessages(vector<string> messages){
-    int n;
-
     if( connect(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr)) < 0)
-        return;
+        return ;
 
     for(string message:messages){
-        write(sockfd, line, strlen(line));
-        n = read(sockfd, line, strlen(line));
-        line[n] = '\0';
+        sleep(1);
+        write(sockfd, message.c_str(), message.length());
     }
+
+    write(sockfd, terminateMessage.c_str(), terminateMessage.length());
 }
+
+
+
