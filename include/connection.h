@@ -14,7 +14,7 @@ public:
     Connection();
     ~Connection();
 
-    void sendMessages(std::vector<std::string> messages);
+    void sendMessages(std::string message);
     bool getConnection();
     struct sockaddr_in servaddr;
 

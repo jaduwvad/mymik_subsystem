@@ -1,6 +1,5 @@
 CC = g++ 
 
-ARCH = $(shell getconf LONG_BIT)
 LIBPATH = ./lib
 SRCPATH = ./src
 OBJPATH = ./obj

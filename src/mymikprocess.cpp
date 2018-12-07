@@ -28,24 +28,6 @@ void MymikProcess::getShopData(Json::Array& shopData){
     shopData = jo[_configMainTag].getArray();
 }
 
-void MymikProcess::showTime(){
-    time_t curr_time = time(NULL);
-    struct tm *curr_tm = localtime(&curr_time);
-    cout << curr_tm->tm_hour << "시 " << curr_tm->tm_min << "분 " << curr_tm->tm_sec << "초" << endl;
-}
-
-string MymikProcess::formSupplierNumber(string spn){
-    string result = spn;
-
-    if(result[0] == 'P')
-        result = result.substr(1, result.length()-1);
-
-    while(result[0] == '0')
-        result = result.substr(1, result.length()-1);
-
-    return result;
-}
-
 void MymikProcess::getESData(vector<Json::Object>& esData, string tag){
     Json::Array resultArray;
     vector<string> fields;
@@ -135,6 +117,23 @@ void MymikProcess::setPriceInven(vector<Json::Object>& matchedData, string filen
     invenFile.close();
 }
 
+void MymikProcess::showTime(){
+    time_t curr_time = time(NULL);
+    struct tm *curr_tm = localtime(&curr_time);
+    cout << curr_tm->tm_hour << "시 " << curr_tm->tm_min << "분 " << curr_tm->tm_sec << "초" << endl;
+}
+
+string MymikProcess::formSupplierNumber(string spn){
+    string result = spn;
+
+    if(result[0] == 'P')
+        result = result.substr(1, result.length()-1);
+
+    while(result[0] == '0')
+        result = result.substr(1, result.length()-1);
+
+    return result;
+}
 
 
 

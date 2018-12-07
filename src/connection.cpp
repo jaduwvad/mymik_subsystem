@@ -17,14 +17,13 @@ Connection::Connection():
 
 Connection::~Connection(){}
 
-void Connection::sendMessages(vector<string> messages){
+void Connection::sendMessages(string message){
     if( connect(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr)) < 0)
         return ;
 
-    for(string message:messages){
-        sleep(1);
-        write(sockfd, message.c_str(), message.length());
-    }
+    write(sockfd, message.c_str(), message.length());
+
+    sleep(1);
 
     write(sockfd, terminateMessage.c_str(), terminateMessage.length());
 }

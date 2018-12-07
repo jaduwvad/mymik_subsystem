@@ -1,15 +1,12 @@
-
 #include "eshandler.h"
 
 using namespace std;
 
 namespace ThreatShopData {
     ESHandler::ESHandler():
-    _ess("46.4.23.60:9200"),
-    _essIndex("articles_price"),
-    _essIndexType("product") {
-
-    }
+        _ess("46.4.23.60:9200"),
+        _essIndex("articles_price"),
+        _essIndexType("product") { }
 
     ESHandler::~ESHandler() {
 
