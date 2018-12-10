@@ -8,6 +8,7 @@
 #include <vector>
 #define MAX_LINE 1024
 #define PORT_NO 50000
+#define SSH_PORT_NO 55555
 
 class Connection {
 public:
@@ -15,14 +16,17 @@ public:
     ~Connection();
 
     void sendMessages(std::string message);
+    void sendFile(std::string filename);
     bool getConnection();
     struct sockaddr_in servaddr;
 
 private:
     int sockfd;
-    char line[MAX_LINE];
     std::string ip;
     std::string terminateMessage;
+
+    std::string localFilePath;
+    std::string scpDstPath;
 };
 
 

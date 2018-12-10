@@ -8,9 +8,7 @@ using namespace std;
 
 MymikProcess::MymikProcess():
     _shopDataFile("/tmp/mymik/data/shop_data.json"),
-    _priceDataDir("/tmp/mymik/results/"),
-    _invenDataAcDir("/tmp/mymik/inven/"),
-    _invenDataInacDir("/tmp/mymik/inven/"),
+    _resultDataDir("/tmp/mymik/results/"),
     _configMainTag("shops") { }
 
 MymikProcess::~MymikProcess() { }
@@ -34,7 +32,7 @@ void MymikProcess::getESData(vector<Json::Object>& esData, string tag){
     ThreatShopData::ESHandler es;
 
     fields.push_back("artnumber");
-    fields.push_back("suppliernumber");
+    fields.push_back("ordernumber");
     fields.push_back("price");
     fields.push_back("variantid");
 
@@ -57,7 +55,7 @@ void MymikProcess::getSrcData(Json::Array::const_iterator ci, string filename, v
 
 void MymikProcess::setUpdatedData(Json::Object& updatedData, Json::Object& srcData, string price, bool priceUpdate) {
     updatedData.addMemberByKey("variantid", srcData["variantid"].getString());
-    updatedData.addMemberByKey("suppliernumber", srcData["suppliernumber"].getString());
+    updatedData.addMemberByKey("ordernumber", srcData["ordernumber"].getString());
     updatedData.addMemberByKey("price", price);
     updatedData.addMemberByKey("priceUpdate", priceUpdate);
 }
@@ -69,9 +67,8 @@ void MymikProcess::matchingList(vector<Json::Object>& srcData, vector<Json::Obje
 
     for(int i=0; i<srcDataSize && esDataIndex < esDataSize; i++){
         string srcArtNumber = srcData.at(i)["ArtNumber"].getString();
-        string esDataSpn = esData.at(esDataIndex)["suppliernumber"].getString();
+        string esDataSpn = esData.at(esDataIndex)["ordernumber"].getString();
 
-        srcArtNumber = formSupplierNumber(srcArtNumber);
         Json::Object updatedData;
 
         if(srcArtNumber>esDataSpn){
@@ -94,8 +91,8 @@ void MymikProcess::matchingList(vector<Json::Object>& srcData, vector<Json::Obje
 void MymikProcess::setPriceInven(vector<Json::Object>& matchedData, string filename) {
     int matchedDataSize = matchedData.size();
 
-    ofstream priceFile(_priceDataDir + "price_" + filename);
-    ofstream invenFile(_invenDataAcDir + "inven_" + filename);
+    ofstream priceFile(_resultDataDir + "price_" + filename);
+    ofstream invenFile(_resultDataDir + "inven_" + filename);
 
     string priceData;
     string invenData;
@@ -103,11 +100,9 @@ void MymikProcess::setPriceInven(vector<Json::Object>& matchedData, string filen
     for(int i=0; i < matchedDataSize; i++){
         Json::Object matchedObject = matchedData.at(i);
 
-        invenFile<<matchedObject["suppliernumber"].getString()<<",";
         invenFile<<matchedObject["variantid"].getString()<<endl;
 
         if(matchedObject["priceUpdate"].getBoolean()){
-            priceFile<<matchedObject["suppliernumber"].getString()<<",";
             priceFile<<matchedObject["variantid"].getString()<<",";
             priceFile<<matchedObject["price"].getString()<<endl;
         }

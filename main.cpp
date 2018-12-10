@@ -3,15 +3,29 @@
 #include <cstring>
 #include "srcdatafile.h"
 #include "mymikprocess.h"
+#include "connection.h"
 
 using namespace std;
 using namespace ThreatShopData;
 
 MymikProcess mp;
-
 void configShop(Json::Object shop);
 
+void sendUpdateSignal(string tag, string filename){
+    Connection c;
+    string message = tag.substr(0, tag.length()-1);
+
+    c.sendFile("price_"+filename);
+    c.sendFile("inven_"+filename);
+    c.sendMessages(message);
+}
+
 int main() {
+    /*
+    Connection c;
+
+    c.sendFile("asdf");
+    */
     Json::Array shopData;
     mp.getShopData(shopData);
 
@@ -35,16 +49,14 @@ void configShop(Json::Object shop){
     mp.getESData(esData, shop["tag"].getString());
 
     sort(esData.begin(), esData.end(), [](Json::Object a, Json::Object b) {
-        return a["suppliernumber"].getString() < b["suppliernumber"].getString();
+        return a["ordernumber"].getString() < b["ordernumber"].getString();
     });
 
     do{
         mp.getSrcData(ci, shop["file"].getString(), srcData);
 
         sort(srcData.begin(), srcData.end(), [](Json::Object a, Json::Object b) {
-            string spnA = a["ArtNumber"].getString();
-            string spnB = b["ArtNumber"].getString();
-            return mp.formSupplierNumber(spnA) < mp.formSupplierNumber(spnB);
+            return a["ArtNumber"].getString() < b["ArtNumber"].getString();
         });
 
         mp.matchingList(srcData, esData, matchedData);
@@ -59,19 +71,7 @@ void configShop(Json::Object shop){
 
     matchedData.clear();
     esData.clear();
+
+    sendUpdateSignal(shop["tag"].getString(), shop["file"].getString());
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

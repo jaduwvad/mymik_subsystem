@@ -29,9 +29,7 @@ public:
 
 private:
     const std::string _shopDataFile;
-    const std::string _priceDataDir;
-    const std::string _invenDataAcDir;
-    const std::string _invenDataInacDir;
+    const std::string _resultDataDir;
 
     const std::string _configMainTag;
 };
