@@ -12,9 +12,9 @@ public:
     //get shop data in json format
     void getShopData(Json::Array& shopData);
     //get article's data by tag and get specific field in Object vector
-    void getESData(std::vector<Json::Object>& esData, std::string tag);
+    void getESData(std::vector<Json::Object>& esData, std::string tag, Json::Array esfield);
     //get article's specific column data in src file from affilinet
-    void getSrcData(Json::Array::const_iterator ci, std::string filename, std::vector<Json::Object>& srcData);
+    void getSrcData(std::string url, std::string filename, std::vector<Json::Object>& srcData, Json::Array srcColumn);
 
     //match two article list. One from affilinet, one from elasticsearch. Check whether price updated
     void matchingList(std::vector<Json::Object>& srcData, std::vector<Json::Object>& esData, std::vector<Json::Object>& result);

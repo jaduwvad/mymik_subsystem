@@ -26,15 +26,17 @@ void MymikProcess::getShopData(Json::Array& shopData){
     shopData = jo[_configMainTag].getArray();
 }
 
-void MymikProcess::getESData(vector<Json::Object>& esData, string tag){
+void MymikProcess::getESData(vector<Json::Object>& esData, string tag, Json::Array esfield){
     Json::Array resultArray;
     vector<string> fields;
     ThreatShopData::ESHandler es;
 
-    fields.push_back("artnumber");
-    fields.push_back("ordernumber");
-    fields.push_back("price");
-    fields.push_back("variantid");
+    Json::Array::const_iterator ci = esfield.begin();
+
+    do{
+        fields.push_back((*ci).getString());
+        ci = ++ci;
+    }while(ci != esfield.end());
 
     es.getArticlesByTag(tag, resultArray);
     es.getFieldList(resultArray, fields, esData);
@@ -42,12 +44,15 @@ void MymikProcess::getESData(vector<Json::Object>& esData, string tag){
     resultArray.clear();
 }
 
-void MymikProcess::getSrcData(Json::Array::const_iterator ci, string filename, vector<Json::Object>& srcData) {
-    ThreatShopData::SrcDataFile ch((*ci).getString(), filename, ';');
+void MymikProcess::getSrcData(string url, string filename, vector<Json::Object>& srcData, Json::Array srcColumn) {
+    ThreatShopData::SrcDataFile ch(url, filename, ';');
     vector<string> headers;
-    
-    headers.push_back("ArtNumber");
-    headers.push_back("Price");
+    Json::Array::const_iterator ci = srcColumn.begin();
+
+    do{
+        headers.push_back((*ci).getString());
+        ci = ++ci;
+    }while(ci != srcColumn.end());
 
     ch.readColumn(headers, srcData);
     headers.clear();
