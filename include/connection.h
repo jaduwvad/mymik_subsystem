@@ -22,12 +22,12 @@ public:
     struct sockaddr_in servaddr;
 
 private:
-    int sockfd;
-    std::string ip;
-    std::string terminateMessage;
+    int _sockfd;
+    std::string _ip;
+    std::string _terminateMessage;
 
-    std::string localFilePath;
-    std::string scpDstPath;
+    std::string _localFilePath;
+    std::string _scpDstPath;
 };
 
 
