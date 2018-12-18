@@ -1,90 +1,193 @@
 #include <algorithm>
 #include <thread>
-
-#include "srcdatafile.h"
-#include "mymikprocess.h"
-#include "connection.h"
+#include <mainprocess.h>
 
 using namespace std;
-using namespace ThreatShopData;
-
-MymikProcess mp;
-string esId = "ordernumber";
-string srcId;
-
-void configShop(Json::Object shop);
-void sendPriceResultFile(string filename);
-void sendInvenResultFile(string filename);
-
-void sendUpdateSignal(string tag){
-    Connection c;
-    string message = tag.substr(0, tag.length()-1);
-
-    c.sendMessages(message);
-}
-
+using namespace Json;
 
 int main() {
-    string url = "https://productdata.awin.com/datafeed/download/apikey/2cfea05a4ea7a32e4edfc8faef6d2e28/fid/23591/format/csv/language/de/delimiter/%2C/compression/gzip/columns/data_feed_id%2Cmerchant_id%2Cmerchant_name%2Caw_product_id%2Caw_deep_link%2Caw_image_url%2Caw_thumb_url%2Ccategory_id%2Ccategory_name%2Cbrand_id%2Cbrand_name%2Cmerchant_product_id%2Cmerchant_category%2Cean%2Cproduct_name%2Cdescription%2Cspecifications%2Cmerchant_deep_link%2Cmerchant_thumb_url%2Cmerchant_image_url%2Cdelivery_time%2Csearch_price%2Cdelivery_cost%2Cstock_quantity%2Ccolour%2Ccustom_1%2Clarge_image%2Cproduct_short_description%2Cstock_status/";
-    SrcDataFile sdf(url, "wave.csv", ';', true);
+    Array shopData;
+    getShopData(shopData);
 
-    /*
-    Connection c;
-
-    c.sendFile("asdf");
-    Json::Array shopData;
-    mp.getShopData(shopData);
-
-    Json::Array::const_iterator ci = shopData.begin();
+    Array::const_iterator ci = shopData.begin();
 
     do{
-        Json::Object shop = (*ci).getObject();
+        Object shop = (*ci).getObject();
         ci = ++ci;
         configShop(shop);
     }while(ci != shopData.end());
-    */
 }
 
-void configShop(Json::Object shop){
-    Json::Array urls = shop["url"].getArray();
-    Json::Array::const_iterator ci = urls.begin();
-    vector<Json::Object> esData;
-    vector<Json::Object> srcData;
-    vector<Json::Object> matchedData;
+void configShop(Object shop){
+    Array urls = shop["url"].getArray();
+    Array::const_iterator ci = urls.begin();
+    vector<Object> esData;
+    vector<Object> srcData;
+    vector<Object> matchedData;
 
     cout<<shop["shop"].getString()<<endl;
-    mp.getESData(esData, shop["tag"].getString(), shop["esfield"].getArray());
+    getESData(esData, shop["tag"].getString());
 
-    sort(esData.begin(), esData.end(), [](Json::Object a, Json::Object b) {
-        return a[esId].getString() < b[esId].getString();
+    sort(esData.begin(), esData.end(), [](Object a, Object b) {
+        return a[_esId].getString() < b[_esId].getString();
     });
 
     do{
-        srcId = shop["srcId"].getString();
-        mp.getSrcData((*ci).getString(), shop["file"].getString(), srcData, shop["srcColumn"].getArray());
+        _srcId = shop["srcId"].getString();
+        _srcPriceId = shop["priceId"].getString();
+        getSrcData((*ci).getString(), shop, srcData);
 
-        sort(srcData.begin(), srcData.end(), [](Json::Object a, Json::Object b) {
-            return a[srcId].getString() < b[srcId].getString();
+        sort(srcData.begin(), srcData.end(), [](Object a, Object b) {
+            return a[_srcId].getString() < b[_srcId].getString();
         });
 
-        mp.matchingList(srcData, esData, matchedData);
+        matchingList(srcData, esData, matchedData);
 
         srcData.clear();
         ++ci;
     } while(ci != urls.end());
 
     cout<<matchedData.size()<<endl;
-
-    mp.setPriceInven(matchedData, shop["file"].getString());
+    setPriceInven(matchedData, shop["file"].getString());
 
     matchedData.clear();
     esData.clear();
 
-    //sendPriceResultFile(shop["file"].getString());
-    //sleep(1);
-    //sendInvenResultFile(shop["file"].getString());
+    sendPriceResultFile(shop["file"].getString());
+    sleep(1);
+    sendInvenResultFile(shop["file"].getString());
 
-    //sendUpdateSignal(shop["tag"].getString());
+    sendUpdateSignal(shop["tag"].getString());
+
+}
+
+void getShopData(Array& shopData){
+    ifstream ifile(_shopDataFile.c_str());
+    Object jo;
+    string lineTemp;
+    string result = "";
+
+    while(getline(ifile, lineTemp))
+        result += lineTemp + "\n";
+
+    jo.addMember(result.c_str(), result.c_str() + result.size());
+    shopData = jo["shops"].getArray();
+
+    Array esfield = jo["esfield"].getArray();
+    Array::const_iterator ci = esfield.begin();
+
+    do{
+        _esFields.push_back((*ci).getString());
+        ci = ++ci;
+    }while(ci != esfield.end());
+}
+
+void getESData(vector<Object>& esData, string tag) {
+    Array resultArray;
+    ThreatShopData::ESHandler es;
+
+    es.getArticlesByTag(tag, resultArray);
+    es.getFieldList(resultArray, _esFields, esData);
+
+    resultArray.clear();
+}
+
+void getSrcData( string url, Object shopData, vector<Object>& srcData ) {
+    ThreatShopData::SrcDataFile *ch;
+    vector<string> headers;
+    string filename = shopData["file"].getString();
+    Array srcColumn = shopData["srcColumn"].getArray();
+    int type = shopData["type"].getInt();
+
+    Array::const_iterator ci = srcColumn.begin();
+
+    switch(type){
+        case 0:
+            ch = new ThreatShopData::SrcDataFile(url, filename, ';');
+            break;
+        case 1:
+            ch = new ThreatShopData::SrcDataFile(url, filename, ',', true);
+            break;
+        case 2:
+            {
+                string userId = shopData["userId"].getString();
+                string userPw = shopData["userPw"].getString();
+                ch = new ThreatShopData::SrcDataFile(url, filename, '	', userId, userPw); 
+                break;
+            }
+        default :
+            return;
+    }
+
+    do{
+        headers.push_back((*ci).getString());
+        ci = ++ci;
+    }while(ci != srcColumn.end());
+
+    ch->readColumn(headers, srcData);
+
+    delete ch;
+
+    headers.clear();
+}
+
+void setUpdatedData(Object& updatedData, Object& srcData, string price, bool priceUpdate) {
+    updatedData.addMemberByKey("variantid", srcData["variantid"].getString());
+    updatedData.addMemberByKey("ordernumber", srcData["ordernumber"].getString());
+    updatedData.addMemberByKey("price", price);
+    updatedData.addMemberByKey("priceUpdate", priceUpdate);
+}
+
+void matchingList(vector<Object>& srcData, vector<Object>& esData, vector<Object>& result) {
+    int esDataIndex = 0;
+    int srcDataSize = srcData.size();
+    int esDataSize = esData.size();
+
+    for(int i=0; i<srcDataSize && esDataIndex < esDataSize; i++){
+        string srcId = srcData.at(i)[_srcId].getString();
+        string esId = esData.at(esDataIndex)[_esId].getString();
+
+        Object updatedData;
+
+        if(srcId>esId){
+            esDataIndex++;
+            i--;
+        }
+        else if(srcId == esId){
+            string price = srcData.at(i)[_srcPriceId].getString();
+
+            if(srcData.at(i)[_srcPriceId].getString() != esData.at(esDataIndex)[_esPriceId].getString())
+                setUpdatedData(updatedData, esData.at(esDataIndex), price, true);
+            else
+                setUpdatedData(updatedData, esData.at(esDataIndex), price, false);
+            result.push_back(updatedData);
+            esDataIndex++;
+        }
+    }
+}
+
+void setPriceInven(vector<Object>& matchedData, string filename) {
+    int matchedDataSize = matchedData.size();
+
+    ofstream priceFile(_resultDataDir + "price_" + filename);
+    ofstream invenFile(_resultDataDir + "inven_" + filename);
+
+    string priceData;
+    string invenData;
+
+    for(int i=0; i < matchedDataSize; i++){
+        Object matchedObject = matchedData.at(i);
+
+        invenFile<<matchedObject["variantid"].getString()<<endl;
+
+        if(matchedObject["priceUpdate"].getBoolean()){
+            priceFile<<matchedObject["variantid"].getString()<<",";
+            priceFile<<matchedObject["price"].getString()<<endl;
+        }
+    }
+
+    priceFile.close();
+    invenFile.close();
 }
 
 void sendPriceResultFile(string filename) {
@@ -97,4 +200,11 @@ void sendInvenResultFile(string filename) {
     Connection c;
 
     c.sendFile("inven_" + filename);
+}
+
+void sendUpdateSignal(string tag){
+    Connection c;
+    string message = tag.substr(0, tag.length()-1);
+
+    c.sendMessages(message);
 }

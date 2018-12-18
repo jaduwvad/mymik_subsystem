@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <stdio.h>
 #include "srcdatafile.h"
 #include "json.h"
 
@@ -33,7 +34,7 @@ namespace ThreatShopData {
 
     SrcDataFile::~SrcDataFile(){
         _srcFile.close();
-        //remove(_filename.c_str());
+        remove(_filename.c_str());
     }
 
     void SrcDataFile::readColumn(vector<string> columnHeaders, vector<Json::Object>& result){
@@ -60,7 +61,6 @@ namespace ThreatShopData {
             result.push_back(jo);
             listTemp.clear();
         }
-
         _srcFile.clear();
         _srcFile.seekg(_filePointer, ios::beg);
     }
@@ -89,12 +89,11 @@ namespace ThreatShopData {
     void SrcDataFile::setCurl(const string url, string userId, string userPw) {
         CURL *curl;
         CURLcode res;
-        struct MemoryStruct chunk;
-        chunk.memory = (char *)malloc(0);
-        chunk.size = 0;
-        chunk.memory[chunk.size] = 0;
+        FILE *fp = fopen(_filename.c_str(), "w");
+
         curl_global_init(CURL_GLOBAL_ALL);
         curl = curl_easy_init();
+
         if(curl) {
             struct curl_slist *headers = NULL;
             headers = curl_slist_append(headers, "Accept: text/plain");
@@ -103,62 +102,32 @@ namespace ThreatShopData {
             curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (long)CURLAUTH_BASIC);
             curl_easy_setopt(curl, CURLOPT_USERNAME, userId.c_str());
             curl_easy_setopt(curl, CURLOPT_PASSWORD, userPw.c_str());
+            curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
 
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeData);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
             curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
             curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
             res = curl_easy_perform(curl);
-            if(res != CURLE_OK) 
-                cout<<"curl_easy_perform() failed: "<<curl_easy_strerror(res);
-            else 
-                cout<<chunk.memory<<endl;
             
             curl_slist_free_all(headers);
             curl_easy_cleanup(curl);
-            free(chunk.memory);
             curl_global_cleanup();
         }
+
         return;
-
-/*
-        FILE *fp = fopen(_filename.c_str(), "w");
-        CURL *curl;
-        CURLcode res;
-        struct curl_slist* headers = NULL;
-
-        //string s = userId+":"+userPw;
-        //cout<<s<<endl;
-        //string data = base64_encode(reinterpret_cast<const unsigned char*>(s.c_str()), s.length());
-        //data = "Authorization: Basic " + data;
-
-        curl = curl_easy_init();
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        headers = curl_slist_append(headers, "Accept: text/plain" );
-        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-
-        curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (long)CURLAUTH_BASIC);
-        curl_easy_setopt(curl, CURLOPT_USERNAME, userId.c_str());
-        curl_easy_setopt(curl, CURLOPT_PASSWORD, userPw.c_str());
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeData);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-
-        res = curl_easy_perform(curl);
-
-        cout<<res<<endl;
-        //cout<<data<<endl;
-        curl_easy_cleanup(curl);
-        fclose(fp);
-*/
     }
 
     void SrcDataFile::myExplode(string s, vector<string>& result) {
         string buff("");
+        bool columnStart = false;
 
-        for(char n:s) {
+        for( int i=0; i<s.length(); i++){
+            char n = s.at(i);
+
             if(n != _delimiter && n != '"')
                 buff += n;
-            else if( n == _delimiter ) {
+            else if ( n == _delimiter ){
                 result.push_back(buff);
                 buff = "";
             }
