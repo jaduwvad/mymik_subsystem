@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <thread>
-#include <mainprocess.h>
+#include "mainprocess.h"
 
 using namespace std;
 using namespace Json;
