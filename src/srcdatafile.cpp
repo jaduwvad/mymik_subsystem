@@ -25,7 +25,7 @@ namespace ThreatShopData {
         this->_delimiter = delimiter;
         setCurl(url);
 
-        string cmd = "gzip -d " + this->_filename;
+        string cmd = "gzip -df " + this->_filename;
 
         system(cmd.c_str());
         this->_filename = filename;
@@ -61,6 +61,7 @@ namespace ThreatShopData {
             result.push_back(jo);
             listTemp.clear();
         }
+
         _srcFile.clear();
         _srcFile.seekg(_filePointer, ios::beg);
     }
@@ -120,19 +121,72 @@ namespace ThreatShopData {
 
     void SrcDataFile::myExplode(string s, vector<string>& result) {
         string buff("");
-        bool columnStart = false;
+        bool isQuoteUsed = checkQuotes(s);
 
-        for( int i=0; i<s.length(); i++){
+        if( isQuoteUsed ){
+            bool inQuote = false;
+            for( int i=0; i<s.length(); i++) {
+                char n = s.at(i);
+
+                if(n == '"' && !inQuote){
+                    inQuote = true;
+                }
+                else if(n == '"' && inQuote) {
+                    if(i == s.length() -1){
+                        inQuote = false;
+                        result.push_back(buff);
+                        buff = "";
+                        i++;
+                    }
+                    else if(s.at(i+1) == '"') {
+                        buff += "\"\"";
+                        i++;
+                    }
+                    else {
+                        inQuote = false;
+                        result.push_back(buff);
+                        buff = "";
+                        i++;
+                    }
+                }
+                else if(n == _delimiter && !inQuote){
+                    result.push_back(buff);
+                    buff = "";
+                }
+                else
+                    buff += n;
+            }
+            if(buff != "") result.push_back(buff);
+        }
+        else{
+            for(char n:s){
+                if(n == _delimiter){
+                    result.push_back(buff);
+                    buff = "";
+                }
+                else //if( n != '"')
+                    buff += n;
+            }
+            if(buff != "" || s.at(s.length()-1) == _delimiter) result.push_back(buff);
+        }
+    }
+
+
+    bool SrcDataFile::checkQuotes(string s){
+        for( int i = 1; i < s.length(); i++) {
             char n = s.at(i);
-
-            if(n != _delimiter && n != '"')
-                buff += n;
-            else if ( n == _delimiter ){
-                result.push_back(buff);
-                buff = "";
+            if(n == '"' && s.at(i-1) == _delimiter){
+                for(int j = i+1; j < s.length(); j++){
+                    if(s.at(j) == '"') {
+                        if(j == s.length() - 1)
+                            return true;
+                        else if(s.at(j+1) == _delimiter)
+                            return true;
+                    }
+                }
             }
         }
-        if(buff != "") result.push_back(buff);
+        return false;
     }
 
     string SrcDataFile::base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len){

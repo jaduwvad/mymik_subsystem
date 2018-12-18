@@ -41,7 +41,7 @@ namespace ThreatShopData {
         std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len);
         //separate data by _delimiter. delete '"'
         void myExplode(std::string s, std::vector<std::string>& result);
-
+        bool checkQuotes(std::string s);
         //function for download file
         static size_t writeData(void *ptr, size_t size, size_t nmemb, FILE *stream){
             return fwrite(ptr, size, nmemb, stream);
