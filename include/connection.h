@@ -8,7 +8,7 @@
 #include <vector>
 
 #define MAX_LINE 1024
-#define PORT_NO 50000
+#define PORT_NO 17914
 #define SSH_PORT_NO 55555
 
 class Connection {

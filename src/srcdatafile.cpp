@@ -55,6 +55,9 @@ namespace ThreatShopData {
             myExplode(strTemp, listTemp);
             Json::Object jo;
 
+            if(listTemp.size() != _header.size())
+                continue;
+
             for(int i=0; i<columnHeaders.size(); i++)
                 jo.addMemberByKey(columnHeaders.at(i), listTemp.at(headerList.at(i)));
 
