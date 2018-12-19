@@ -53,9 +53,7 @@ void configShop(Object shop){
     matchedData.clear();
     esData.clear();
 
-    sendPriceResultFile(shop["file"].getString());
-    sleep(1);
-    sendInvenResultFile(shop["file"].getString());
+    sendResultFile(shop["file"].getString());
 
     sendUpdateSignal(shop["tag"].getString());
 
@@ -131,11 +129,9 @@ void getSrcData( string url, Object shopData, vector<Object>& srcData ) {
     headers.clear();
 }
 
-void setUpdatedData(Object& updatedData, Object& srcData, string price, bool priceUpdate) {
+void setUpdatedData(Object& updatedData, Object& srcData, string price) {
     updatedData.addMemberByKey("variantid", srcData["variantid"].getString());
-    updatedData.addMemberByKey("ordernumber", srcData["ordernumber"].getString());
     updatedData.addMemberByKey("price", price);
-    updatedData.addMemberByKey("priceUpdate", priceUpdate);
 }
 
 void matchingList(vector<Object>& srcData, vector<Object>& esData, vector<Object>& result) {
@@ -156,10 +152,7 @@ void matchingList(vector<Object>& srcData, vector<Object>& esData, vector<Object
         else if(srcId == esId){
             string price = srcData.at(i)[_srcPriceId].getString();
 
-            if(srcData.at(i)[_srcPriceId].getString() != esData.at(esDataIndex)[_esPriceId].getString())
-                setUpdatedData(updatedData, esData.at(esDataIndex), price, true);
-            else
-                setUpdatedData(updatedData, esData.at(esDataIndex), price, false);
+            setUpdatedData(updatedData, esData.at(esDataIndex), price);
             result.push_back(updatedData);
             esDataIndex++;
         }
@@ -169,37 +162,22 @@ void matchingList(vector<Object>& srcData, vector<Object>& esData, vector<Object
 void setPriceInven(vector<Object>& matchedData, string filename) {
     int matchedDataSize = matchedData.size();
 
-    ofstream priceFile(_resultDataDir + "price_" + filename);
-    ofstream invenFile(_resultDataDir + "inven_" + filename);
-
-    string priceData;
-    string invenData;
+    ofstream resultFile(_resultDataDir + filename);
 
     for(int i=0; i < matchedDataSize; i++){
         Object matchedObject = matchedData.at(i);
 
-        invenFile<<matchedObject["variantid"].getString()<<endl;
-
-        if(matchedObject["priceUpdate"].getBoolean()){
-            priceFile<<matchedObject["variantid"].getString()<<",";
-            priceFile<<matchedObject["price"].getString()<<endl;
-        }
+        resultFile<<matchedObject["variantid"].getString()<<",";
+        resultFile<<matchedObject["price"].getString()<<endl;
     }
 
-    priceFile.close();
-    invenFile.close();
+    resultFile.close();
 }
 
-void sendPriceResultFile(string filename) {
+void sendResultFile(string filename) {
     Connection c;
 
-    c.sendFile("price_" + filename);
-}
-
-void sendInvenResultFile(string filename) {
-    Connection c;
-
-    c.sendFile("inven_" + filename);
+    c.sendFile(filename);
 }
 
 void sendUpdateSignal(string tag){
