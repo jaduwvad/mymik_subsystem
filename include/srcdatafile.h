@@ -46,21 +46,10 @@ namespace ThreatShopData {
         static size_t writeData(void *ptr, size_t size, size_t nmemb, FILE *stream){
             return fwrite(ptr, size, nmemb, stream);
         }
-        static size_t WriteMemoryCallback(void *ptr, size_t size, size_t nmemb, void *context) {
-            size_t bytec = size * nmemb;
-            struct MemoryStruct *mem = (struct MemoryStruct *)context;
-            mem->memory = (char *)realloc(mem->memory,mem->size + bytec + 1);
-            if(mem->memory == NULL) {
-                printf("not enough memory (realloc returned NULL)\n");
-                return 0;
-            }
-            memcpy(&(mem->memory[mem->size]), ptr, bytec);
-            mem->size += bytec;
-            mem->memory[mem->size] = 0;
-            return nmemb;
-        }
 
+        //filename for downloaded data
         std::string _filename;
+        //file stream at downloaded data
         std::ifstream _srcFile;
         char _delimiter;
         std::vector<std::string> _header;
