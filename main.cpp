@@ -41,6 +41,11 @@ void configShop(Object shop){
             return a[_srcId].getString() < b[_srcId].getString();
         });
 
+        if(shop["tag"].getString() == "FLC-") 
+            for(int i=0; i<srcData.size(); i++)
+                if(srcData.at(i)["CF_Availability"].getString() == "No") 
+                    srcData.erase(srcData.begin() + i);
+
         matchingList(srcData, esData, matchedData);
 
         srcData.clear();
@@ -48,7 +53,7 @@ void configShop(Object shop){
     } while(ci != urls.end());
 
     cout<<matchedData.size()<<endl;
-    setPriceInven(matchedData, shop["file"].getString());
+    writeOnFile(matchedData, shop["file"].getString());
 
     matchedData.clear();
     esData.clear();
@@ -159,7 +164,7 @@ void matchingList(vector<Object>& srcData, vector<Object>& esData, vector<Object
     }
 }
 
-void setPriceInven(vector<Object>& matchedData, string filename) {
+void writeOnFile(vector<Object>& matchedData, string filename) {
     int matchedDataSize = matchedData.size();
 
     ofstream resultFile(_resultDataDir + filename);
