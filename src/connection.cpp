@@ -4,6 +4,11 @@
 
 using namespace std;
 
+/**
+ * @brief	Constructor : set connecting values
+ * @description	Make connection to my-mik shop server
+ * 		Open socket at private global value
+ */
 Connection::Connection():
     _ip("94.130.50.93"),
     _localFilePath("/tmp/mymik/results/"),
@@ -20,17 +25,27 @@ Connection::Connection():
 
 Connection::~Connection(){}
 
+/**
+ * @brief	Send a message to connected shop server
+ * @description	Get message for send to shop server by parameter.
+ * 		After send it, send terminate message to quit connection.
+ */
 void Connection::sendMessages(string message){
     if( connect(_sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr)) < 0)
         return ;
 
     write(_sockfd, message.c_str(), message.length());
 
-    sleep(1);
+    sleep(5);
 
     write(_sockfd, _terminateMessage.c_str(), _terminateMessage.length());
 }
 
+/**
+ * @brief	Send result file to connected shop server
+ * @description	Get file's full path by parameter
+ * 		Send file by SSH connection to connected shop server
+ */
 void Connection::sendFile(string filename){
     unsigned long hostaddr;
     int sock, i, auth_pw = 1;

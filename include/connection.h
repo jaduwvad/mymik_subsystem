@@ -16,12 +16,13 @@ public:
     Connection();
     ~Connection();
 
+    //Send a string to connected shop server
     void sendMessages(std::string message);
+    //Send a file to connected shop server
     void sendFile(std::string filename);
-    bool getConnection();
-    struct sockaddr_in servaddr;
 
 private:
+    struct sockaddr_in servaddr;
     int _sockfd;
     std::string _ip;
     std::string _terminateMessage;
