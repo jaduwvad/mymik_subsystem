@@ -9,11 +9,6 @@
 
 class SrcDataFile {
 public:
-    struct MemoryStruct {
-        char *memory;
-        size_t size;
-    };
-
     //Default constructor : download file by url in filename, open filestream
     SrcDataFile(std::string url, std::string filename, const char delimiter);
     //Constructor for urls requiring login
