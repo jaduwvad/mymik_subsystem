@@ -53,8 +53,8 @@ void Connection::sendFile(string filename){
     const char *fingerprint;
     LIBSSH2_SESSION *session = NULL;
     LIBSSH2_CHANNEL *channel;
-    const char *username="root";
-    const char *password="!Geld7914";
+    const char *username="";
+    const char *password="";
     string loclfile= _localFilePath + filename;
     string scppath= _scpDstPath + filename;
     FILE *local;
